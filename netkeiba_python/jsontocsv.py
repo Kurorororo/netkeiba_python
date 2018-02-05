@@ -42,7 +42,7 @@ HEADER = [# race information
           'is_dirt_slightly_heavy',
           'is_dirt_heavy',
           'is_dirt_bad',
-          'number-of-horses',
+          'number_of_horses',
           # horse str information
           'name',
           'jocky',
@@ -56,14 +56,14 @@ HEADER = [# race information
           'is_castrated',
           'age',
           'weight',
-          'horse-weight',
-          'horse-weight-difference',
+          'horse_weight',
+          'horse_weight_difference',
           # odds information,
           'odds',
           'popularity',
           # horse premium information
-          'time-metric',
-          'train-time',
+          'time_metric',
+          'train_time',
           'comments',
           'remarks',
           # result information
@@ -71,7 +71,7 @@ HEADER = [# race information
           'time',
           'difference',
           'passed',
-          'last-spurt',
+          'last_spurt',
           'prise']
 
 
