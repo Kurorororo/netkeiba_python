@@ -31,7 +31,7 @@ HEADER = [# race information
           'is_right',
           'is_left',
           'is_straight',
-          'distace',
+          'distance',
           'is_sunny',
           'is_cloudy',
           'is_rainy',
