@@ -1,3 +1,4 @@
+import argparse
 import csv
 import json
 import re
@@ -5,6 +6,7 @@ import re
 
 HEADER = [# race information
           'race_id',
+          'date',
           'year',
           'month',
           'day',
@@ -18,6 +20,7 @@ HEADER = [# race information
           'is_cloudy',
           'is_rainy',
           'ground_wettness',
+          'number-of-horses',
           # horse str information
           'name',
           'jocky',
@@ -68,9 +71,14 @@ def parse_title(title):
     m = re.search(r"([0-9]{4})年([0-9]{2})月([0-9]{2})日", title)
 
     if m:
-        return m.group(1), m.group(2), m.group(3)
+        year = m.group(1)
+        month = m.group(2)
+        day = m.group(3)
+        date = year + '-' + month + '-' +  day
 
-    return None
+        return date, m.group(1), m.group(2), m.group(3)
+
+    return None, None, None, None
 
 
 def parse_field(smalltxt):
@@ -237,8 +245,7 @@ def parse_prise(prise):
 
 
 def parse_race(race_id, race):
-    print(race['title'])
-    year, month, day = parse_title(race['title'])
+    date, year, month, day = parse_title(race['title'])
 
     smalltxt = race['diary']
     turf, dart, obstacle = parse_field(smalltxt)
@@ -246,8 +253,10 @@ def parse_race(race_id, race):
     distance = parse_distance(smalltxt)
     sunny, cloudy, rainy = parse_weather(smalltxt)
     wettness = parse_wettness(smalltxt, turf == 1)
+    number_of_horses = len(race['horses'])
 
     return [race_id,
+            date,
             year,
             month,
             day,
@@ -260,7 +269,8 @@ def parse_race(race_id, race):
             sunny,
             cloudy,
             rainy,
-            wettness]
+            wettness,
+            number_of_horses]
 
 
 def parse_horse(horse):
@@ -318,11 +328,11 @@ def parse_horse(horse):
             prise]
 
 
-def main():
-    with open('keiba-10y.json') as f:
+def main(infile, outfile):
+    with open(infile) as f:
         data = json.load(f)
 
-    with open('keyba-10y.csv', 'w') as f:
+    with open(outfile, 'w') as f:
         writer = csv.writer(f, lineterminator='\n')
         writer.writerow(HEADER)
 
@@ -338,4 +348,17 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i',
+                        '--infile',
+                        help='入力となる JSON ファイル',
+                        type=str,
+                        required=True)
+    parser.add_argument('-o',
+                        '--outfile',
+                        help='出力となる CSV ファイル',
+                        type=str,
+                        required=True)
+    args = parser.parse_args()
+
+    main(args.infile, args.outfile)
