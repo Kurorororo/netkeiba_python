@@ -3,28 +3,6 @@ import json
 import re
 
 
-KEYS  = ['order',
-         'frame',
-         'number',
-         'name',
-         'age',
-         'weight',
-         'jocky',
-         'time',
-         'difference',
-         'time-metric',
-         'passed',
-         'last-spurt',
-         'odds',
-         'popularity',
-         'horse-weight',
-         'train-time',
-         'comments',
-         'remarks',
-         'trainer',
-         'owner',
-         'prise']
-
 HEADER = [# race information
           'race_id',
           'year',

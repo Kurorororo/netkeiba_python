@@ -3,28 +3,30 @@ import re
 import scrapy
 
 
+# この日付けより後のデータのみ取得する
 DATA_MIN = '20071231'
-HEADER = ['order',
-          'frame',
-          'number',
-          'name',
-          'age',
-          'weight',
-          'jocky',
-          'time',
-          'difference',
-          'time-metric',
-          'passed',
-          'last-spurt',
-          'odds',
-          'popularity',
-          'horse-weight',
-          'train-time',
-          'comments',
-          'remarks',
-          'trainer',
-          'owner',
-          'prise']
+# JSON のキー
+KEYS = ['order',
+        'frame',
+        'number',
+        'name',
+        'age',
+        'weight',
+        'jocky',
+        'time',
+        'difference',
+        'time-metric',
+        'passed',
+        'last-spurt',
+        'odds',
+        'popularity',
+        'horse-weight',
+        'train-time',
+        'comments',
+        'remarks',
+        'trainer',
+        'owner',
+        'prise']
 
 
 class NetkeibaSpider(scrapy.Spider):
@@ -82,7 +84,7 @@ class NetkeibaSpider(scrapy.Spider):
         for i, tr in enumerate(response.css('.race_table_01 tr')[1:]):
             result['horses'].append({})
 
-            for h, td in zip(HEADER, tr.css('td')):
+            for h, td in zip(KEYS, tr.css('td')):
                 result['horses'][i][h] = None
 
                 if td.css('::text'):
