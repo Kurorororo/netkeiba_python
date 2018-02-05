@@ -17,6 +17,7 @@ HEADER = [# race information
           'is_May',
           'is_Jun',
           'is_Jul',
+          'is_Aug',
           'is_Sep',
           'is_Oct',
           'is_Nov',
