@@ -10,16 +10,38 @@ HEADER = [# race information
           'year',
           'month',
           'day',
+          'is_Jan',
+          'is_Feb',
+          'is_Mar',
+          'is_Apr',
+          'is_May',
+          'is_Jun',
+          'is_Jul',
+          'is_Sep',
+          'is_Oct',
+          'is_Nov',
+          'is_Dec',
+          'is_g1',
+          'is_g2',
+          'is_g3',
           'is_turf',
-          'is_dart',
+          'is_dirt',
           'is_obstacle',
           'is_right',
           'is_left',
+          'is_straight',
           'distace',
           'is_sunny',
           'is_cloudy',
           'is_rainy',
-          'ground_wettness',
+          'is_turf_good',
+          'is_turf_slightly_heavy',
+          'is_turf_heavy',
+          'is_turf_bad',
+          'is_dirt_good',
+          'is_dirt_slightly_heavy',
+          'is_dirt_heavy',
+          'is_dirt_bad',
           'number-of-horses',
           # horse str information
           'name',
@@ -76,46 +98,65 @@ def parse_title(title):
         day = m.group(3)
         date = year + '-' + month + '-' +  day
 
-        return date, m.group(1), m.group(2), m.group(3)
+        return date, int(m.group(1)), int(m.group(2)), int(m.group(3))
 
     return None, None, None, None
 
 
-def parse_field(smalltxt):
-    field = smalltxt[0]
+def parse_class(title):
+    g1 = 0
+    g2 = 0
+    g3 = 0
+
+    if re.search(r"G1", title):
+        g1 = 1
+
+    if re.search(r"G2", title):
+        g2 = 1
+
+    if re.search(r"G3", title):
+        g3 = 1
+
+    return g1, g2, g3
+
+
+def parse_field(diary):
     turf = 0
-    dart = 0
+    dirt = 0
     obstacle = 0
 
-    if field == '芝':
+    if re.search(r"芝", diary):
         turf = 1
 
-    if field == 'ダ':
-        dart = 1
+    if re.search(r"ダート", diary):
+        dirt = 1
 
-    if field == '障':
+    if re.search(r"障害", diary):
         obstacle = 1
 
-    return turf, dart, obstacle
+    return turf, dirt, obstacle
 
 
-def parse_rotation(smalltxt):
-    rotation = smalltxt[1]
+def parse_rotation(diary):
     right = 0
     left = 0
+    straight = 0
 
-    if rotation == '右':
+    if re.search(r"右", diary):
         right = 1
 
-    if rotation == '左':
+    if re.search(r"左", diary):
         left = 1
 
-    return right, left
+    if re.search(r"直線", diary):
+        straight = 1
+
+    return right, left, straight
 
 
-def parse_distance(smalltxt):
+def parse_distance(diary):
     distance = None
-    m = re.search(r"([0-9]+)m", smalltxt)
+    m = re.search(r"([0-9]+)m", diary)
 
     if m:
         distance = int(m.group(1))
@@ -123,11 +164,11 @@ def parse_distance(smalltxt):
     return distance
 
 
-def parse_weather(smalltxt):
+def parse_weather(diary):
     sunny = 0
     cloudy = 0
     rainy = 0
-    m = re.search(r"天候 : (.)", smalltxt)
+    m = re.search(r"天候 : (.)", diary)
     weather = None
 
     if m:
@@ -145,33 +186,46 @@ def parse_weather(smalltxt):
     return sunny, cloudy, rainy
 
 
-def parse_wettness(smalltxt, is_turf):
-    m = None
+def parse_turf_wetness(diary):
+    good = 0
+    slightly_heavy = 0
+    heavy = 0
+    bad = 0
 
-    if is_turf:
-        m = re.search(r"芝 : (.{1,2})", smalltxt)
-    else:
-        m = re.search(r"ダート : (.{1,2})", smalltxt)
+    if re.search(r"芝 : 良", diary):
+        good = 1
 
-    if not m:
-        return None
+    if re.search(r"芝 : 稍重", diary):
+        slightly_heavy = 1
 
-    wettness_str = m.group(1)
-    wettness = None
+    if re.search(r"芝 : 重", diary):
+        heavy = 1
 
-    if wettness_str[0] == '良':
-        wettness = 1
+    if re.search(r"芝 : 不良", diary):
+        bad = 1
 
-    if wettness_str == '稍重':
-        wettness = 2
+    return good, slightly_heavy, heavy, bad
 
-    if wettness_str[0] == '重':
-        wettness = 3
 
-    if wettness_str == '不良':
-        wettness = 4
+def parse_dirt_wetness(diary):
+    good = 0
+    slightly_heavy = 0
+    heavy = 0
+    bad = 0
 
-    return wettness
+    if re.search(r"ダート : 良", diary):
+        good = 1
+
+    if re.search(r"ダート : 稍重", diary):
+        slightly_heavy = 1
+
+    if re.search(r"ダート : 重", diary):
+        heavy = 1
+
+    if re.search(r"ダート : 不良", diary):
+        bad = 1
+
+    return good, slightly_heavy, heavy, bad
 
 
 def parse_age(age):
@@ -245,32 +299,46 @@ def parse_prise(prise):
 
 
 def parse_race(race_id, race):
-    date, year, month, day = parse_title(race['title'])
+    title = race['title']
+    date, year, month, day = parse_title(title)
+    race_info = [race_id, date, year, month, day]
+    race_info += [1 if (i + 1) == month else 0 for i in range(12)]
 
-    smalltxt = race['diary']
-    turf, dart, obstacle = parse_field(smalltxt)
-    right, left = parse_rotation(smalltxt)
-    distance = parse_distance(smalltxt)
-    sunny, cloudy, rainy = parse_weather(smalltxt)
-    wettness = parse_wettness(smalltxt, turf == 1)
+    g1, g2, g3 = parse_class(title)
+
+    diary = race['diary']
+    turf, dirt, obstacle = parse_field(diary)
+    right, left, straight = parse_rotation(diary)
+    distance = parse_distance(diary)
+    sunny, cloudy, rainy = parse_weather(diary)
+    t_good, t_slightly_heavy, t_heavy, t_bad = parse_turf_wetness(diary)
+    d_good, d_slightly_heavy, d_heavy, d_bad = parse_dirt_wetness(diary)
     number_of_horses = len(race['horses'])
 
-    return [race_id,
-            date,
-            year,
-            month,
-            day,
-            turf,
-            dart,
-            obstacle,
-            right,
-            left,
-            distance,
-            sunny,
-            cloudy,
-            rainy,
-            wettness,
-            number_of_horses]
+    race_info += [g1,
+                  g2,
+                  g3,
+                  turf,
+                  dirt,
+                  obstacle,
+                  right,
+                  left,
+                  straight,
+                  distance,
+                  sunny,
+                  cloudy,
+                  rainy,
+                  t_good,
+                  t_slightly_heavy,
+                  t_heavy,
+                  t_bad,
+                  d_good,
+                  d_slightly_heavy,
+                  d_heavy,
+                  d_bad,
+                  number_of_horses]
+
+    return race_info
 
 
 def parse_horse(horse):
